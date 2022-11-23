@@ -16,14 +16,14 @@ function Withdraw(){
 
 function WithdrawMsg(props){
   return(<>
-    <h5>Withdrawl Successful</h5>
+    <h5>Success</h5>
     <button type="submit" 
       className="btn btn-light" 
       onClick={() => {
         props.setShow(true);
         props.setStatus('');
       }}>
-        Withdraw more funds
+        Withdraw again
     </button>
   </>);
 }
