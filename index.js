@@ -1,103 +1,142 @@
 var express = require('express');
-var app     = express();
-var cors    = require('cors');
-var dal     = require('./dal.js');
-const e = require('express');
+var app = express();
+var cors = require('cors');
+var dal = require('./dal.js');
+var md5 = require('js-md5');
+
+//var users = [];
 
 // used to serve static files from public directory
 app.use(express.static('public'));
 app.use(cors());
+app.use(express.urlencoded({ extended: false }));
+ app.use(express.json());
+app.use(express.raw());
+const token = 'aaa-bbb-ccc';
 
-// create user account
-app.get('/account/create/:name/:email/:password', function (req, res) {
-
-    // check if account exists
-    dal.find(req.params.email).
-        then((users) => {
-
-            // if user exists, return error message
-            if(users.length > 0){
-                console.log('User already in exists');
-                res.send('User already in exists');    
-            }
-            else{
-                // else create user
-                dal.create(req.params.name,req.params.email,req.params.password).
-                    then((user) => {
-                        console.log(user);
-                        res.send(user);            
-                    });            
-            }
-
+// login user
+app.post('/accounts/login', function (req, res, next) {
+    const passwordHash = md5(req.body.password);
+    dal
+        .checkLogin(req.body.email, passwordHash)
+        .then((response) => {
+            res.send({
+                id: response._id,
+                name: response.name,
+                email: response.email,
+                token,
+                isAdmin: response.isAdmin,
+                balance: response.balance
+            });
+        })
+        .catch(() => {
+            next('login failed');
         });
 });
 
 
-// login user 
-app.get('/account/login/:email/:password', function (req, res) {
-
-    dal.find(req.params.email).
-        then((user) => {
-
-            // if user exists, check password
-            if(user.length > 0){
-                if (user[0].password === req.params.password){
-                    res.send(user[0]);
-                }
-                else{
-                    res.send('Login failed: wrong password');
-                }
-            }
-            else{
-                res.send('Login failed: user not found');
-            }
-    });
-    
-});
-
-// find user account
-app.get('/account/find/:email', function (req, res) {
-
-    dal.find(req.params.email).
-        then((user) => {
-            console.log(user);
-            res.send(user);
-    });
-});
-
-// find one user by email - alternative to find
-app.get('/account/findOne/:email', function (req, res) {
-
-    dal.findOne(req.params.email).
-        then((user) => {
-            console.log(user);
-            res.send(user);
-    });
-});
-
-
-// update - deposit/withdraw amount
-app.get('/account/update/:email/:amount', function (req, res) {
-
-    var amount = Number(req.params.amount);
-
-    dal.update(req.params.email, amount).
-        then((response) => {
-            console.log(response);
-            res.send(response);
-    });    
+// create user account with dal
+app.post('/accounts', function(req, res){
+    if (req.body.name && req.body.email && req.body.password) {
+    // else create user
+        req.body.password = md5(req.body.password);
+        dal.createUser(req.body).
+            then((user) => {
+                res.send(user);
+            });
+    }
 });
 
 // all accounts
-app.get('/account/all', function (req, res) {
+app.get('/accounts', async function(req, res, next){
 
-    dal.all().
-        then((docs) => {
-            console.log(docs);
-            res.send(docs);
+            dal.all()
+                .then ((docs) => {
+                    res.send(docs);
+                });
+
+});
+
+app.delete('/accounts', async (req, res, next) => {
+    try {
+        const userId = req.body.id;
+        if(!userId) throw new Error('User cannot be authenticated');
+        const _isAdmin = await dal.isAdmin(userId);
+
+        if(_isAdmin) {
+            dal.deleteAllUsers()
+            .then(() => {
+                res.send('Success');
+            })
+            .catch(err => {
+                next(err);
+            });
+        }
+        else throw new Error('User does not have permission');
+    } catch (e) {next(e)}
+});
+
+app.get('/accounts/:id', (req, res, next) => {
+    dal.getAccount(req.params.id)
+        .then((account) => {
+            console.log(account);
+            res.send(account)
+        })
+        .catch(err => {
+            next(err);
+        })
+})
+
+app.get('/accounts/:id/toggleAdmin', (req, res, next) => {
+    dal.toggleAdmin(req.params.id)
+        .then((bool) => {
+            res.send({ isAdmin: bool });
+        })
+        .catch(err => {
+            next(err);
+        })
+})
+
+// deposit route
+app.post('/accounts/:id/deposit', async (req, res, next) => {
+    const id = req.params.id;
+    const depositAmount = req.query.amount;
+    if(!(depositAmount > 0)) next('Deposit must be greater than 0');
+    try {
+        const newBalance = await dal.deposit(id, depositAmount);
+    
+        res.send({id, newBalance});
+    } catch(e) {
+        next(e)
+    }
+});
+
+// withdraw route
+app.post('/accounts/:id/withdraw', async (req, res, next) =>{
+    const id = req.params.id;
+    const withdrawAmount = req.query.amount;
+    try {
+        const newBalance = await dal.withdraw(id, withdrawAmount)
+            // return amount withdrawn and remainder
+        res.send({
+            id,
+            newBalance,
+            withdrawAmount,
+        });
+    } catch(e) {
+        next(e)
+    }
+});
+
+// balance route
+app.get('/account/balance/:balance/:name/:email/:password', function(req, res){
+    res.send({
+        balance: req.params.balance,
+        amount: req.params.amount,
+        email: req.params.string,
+        password: req.params.password
     });
 });
 
-var port = 3000;
-app.listen(port);
-console.log('Running on port: ' + port);
+var port = process.env.PORT || 3001;
+app.listen(port, () => console.log('Running on port: ' + port));

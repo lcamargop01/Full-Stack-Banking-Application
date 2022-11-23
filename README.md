@@ -1,58 +1,16 @@
-# Fullstack Banking Application 
+# Final_Capstone_BadBank
+![BadBank_Look](https://user-images.githubusercontent.com/51896051/174496347-8fcbc557-0666-481c-baad-86c56f2c3dfa.PNG)
+## Link: https://chen-bad-bank.herokuapp.com/
+## Description
+#### This full-stack app was created as a final project for MIT Full-Stack Application bootcamp. It uses MERN with MongoDB Atalas to have a cloud base web application. Firebase is used for Web Authentication. Heroku is used as the deployment tool. 
 
-## The BadBank
 
-This Fullstack banking application emulates how a withdraw and deposit works on a bank. It has `login` and `create account` tabs that you need to sign up/in with first to authenticate the users access before you can use the `withdraw` and `deposit` features, the credentials for registers users are placed on the `All Data` tab. 
 
-This project was bootstrapped with [Create React App].  
-
-<img width="1195" alt="Screen Shot 2022-07-05 at 6 48 43 PM" src="https://user-images.githubusercontent.com/89609365/177429811-a918a3b5-d149-43b5-a765-46cb0f5d9a2a.png">
-
-https://seman-michelle-badbank2.herokuapp.com/#/
-
-## Installation guide
-
-accessing the code
-
-* Clone the git repository
-
-Install dependencies for server & client
-
-* npm install
-
-Run client & server with concurrently
-
-* npm run dev
-
-Server runs on http://localhost:5000 and client on http://localhost:3000
-
-** Be sure to add your custom MONGO_URI to the .env file 
-
-## Tech Stack - MERN
-### Client Side
-* HTML
-* CSS
-* JavaScript
-* React js
-* Formik
-* Bootstrap (card, navbar)
-### Server Side
-* MongoDB
-* Mongoose
-* Express
-* Node.js
+## Language Used:
+#### MERN (MongdoDB, Express, Reract, Node.js) + Firebase + Heroku
 
 ## Features
-* create account
-* login
-* deposit
-* withdraw
-* retrieve all data
-
-## To-Do
-- [ ] add log-out capability
-- [ ] add OAuth2 authentication
-- [ ] make all data only accessible once the user is logged in
+#### This web application has been built with multiple layers. The navigation bar will show for all users with create account and login information. Only when the user create the account or Login can they use the rest of functions. Those functions includ Depostion, Withdraw, Balance Information. For those that are assigned as Admin, they will see an extra page for all User information. The data has been talked directly to MongoDb Atalas to create new users. When old users login, they will go through FireBase authentication for confirm their identify by their email address and password. 
 
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+#### This project is licensed under the MIT License.

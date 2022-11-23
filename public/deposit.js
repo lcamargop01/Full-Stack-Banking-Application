@@ -1,70 +1,81 @@
 function Deposit(){
-  const [show, setShow]     = React.useState(true);
-  const [status, setStatus] = React.useState('');  
+    const [show, setShow]   = React.useState(true);
+    const [status, setStatus] = React.useState('');
+    const [email, setEmail] = React.useState('');
+    const [amount, setAmount] = React.useState(0);
+    const [deposit, setDeposit] = React.useState(0);
+    const [balance, setBalance] = React.useState(0);
 
-  return (
-    <Card
-      bgcolor="warning"
-      header="Deposit"
-      status={status}
-      body={show ? 
-        <DepositForm setShow={setShow} setStatus={setStatus}/> :
-        <DepositMsg setShow={setShow} setStatus={setStatus}/>}
-    />
-  )
-}
+    const {user, setUser} = React.useContext(UserContext);
+    //const [deposit, setDeposit] = React.useState('');
 
-function DepositMsg(props){
-  return (<>
-    <h5>Success</h5>
-    <button type="submit" 
-      className="btn btn-light" 
-      onClick={() => {
-          props.setShow(true);
-          props.setStatus('');
-      }}>
-        Deposit again
-    </button>
-  </>);
-} 
 
-function DepositForm(props){
-  const [email, setEmail]   = React.useState('');
-  const [amount, setAmount] = React.useState('');
-
-  function handle(){
-    fetch(`/account/update/${email}/${amount}`)
-    .then(response => response.text())
-    .then(text => {
-        try {
-            const data = JSON.parse(text);
-            props.setStatus(JSON.stringify(data.value));
-            props.setShow(false);
-            console.log('JSON:', data);
-        } catch(err) {
-            props.setStatus('Deposit failed')
-            console.log('err:', text);
+    React.useEffect(() => {
+        const getBalance = async (id) => {
+            const url = `/accounts/${id}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            setBalance(data.balance);
         }
-    });
-  }
 
-  return(<>
+        getBalance(user._id);
+    }, []);
 
-    Email<br/>
-    <input type="input" 
-      className="form-control" 
-      placeholder="Enter email" 
-      value={email} onChange={e => setEmail(e.currentTarget.value)}/><br/>
-      
-    Amount<br/>
-    <input type="number" 
-      className="form-control" 
-      placeholder="Enter amount" 
-      value={amount} onChange={e => setAmount(e.currentTarget.value)}/><br/>
+    function validateDeposit(field, label){
+        if (!field){
+            setStatus('Error: ' + label);
+            setTimeout(() => setStatus(''),3000);
+            return false;
+        }
+        if (!(field > 0)){
+            setStatus('Error: Deposit cannot be negative');
+            setTimeout(() => setStatus(''),3000);
+            return false;
+        }
+            return true;
+    }
+    
+    
+    const handleDeposit = async () => {
+        console.log(amount);
+        if (!validateDeposit(amount, 'amount')) return;
+        const url = `/accounts/${user._id}/deposit`;
+        const res = await fetch(`${url}?${new URLSearchParams({amount})}`
+        , {
+            method: 'POST',
+        });
+        var data = await res.json();
+        setBalance(data.newBalance);
+        setUser({...user, balance: data.newBalance});
+        setShow(false);
+    }
 
-    <button type="submit" 
-      className="btn btn-light" 
-      onClick={handle}>Deposit</button>
 
-  </>);
+    function clearForm(){
+        setAmount(0);
+        setShow(true);
+    }
+
+    return(
+        <Card
+            bgcolor="success"
+            header="Deposit"
+            Status={status}
+            body={show ? (
+                    <>
+                    Balance  {balance}<br/>
+                    <input type="input" className="form-control" id="input"
+                    placeholder="Deposit" value={amount} onChange={e => setAmount(e.currentTarget.value)} /><br/>
+                    <button type="submit" className="btn btn-light" onClick={handleDeposit}>amount</button>
+                    </>
+                ):(
+                    <>
+                    <h5>Success</h5>
+                    <dl><dt>New Balance:</dt><dd>{balance}</dd></dl>
+                    <button type="submit" className="btn btn-light" onClick={clearForm}>Add another deposit</button>
+                    </>
+                )
+            }
+        />
+    )
 }
