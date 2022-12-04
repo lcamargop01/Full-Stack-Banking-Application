@@ -1,6 +1,5 @@
 # Final_Capstone_BadBank
 ![BadBank_Look](https://user-images.githubusercontent.com/51896051/174496347-8fcbc557-0666-481c-baad-86c56f2c3dfa.PNG)
-## Link: https://chen-bad-bank.herokuapp.com/
 ## Description
 #### This full-stack app was created as a final project for MIT Full-Stack Application bootcamp. It uses MERN with MongoDB Atalas to have a cloud base web application. Firebase is used for Web Authentication. Heroku is used as the deployment tool. 
 
